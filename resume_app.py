@@ -8,7 +8,7 @@ import io
 import re
 import os
 
-key= os.getenv['OPENAI_API_KEY']
+key = os.getenv('OPENAI_API_KEY')
 
 # Load OpenAI API key from Streamlit secrets
 client = openai.OpenAI(api_key=key)
