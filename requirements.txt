@@ -1,0 +1,6 @@
+streamlit
+openai
+reportlab
+re
+io
+numpy
