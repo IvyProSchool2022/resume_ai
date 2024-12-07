@@ -3,4 +3,4 @@ openai
 reportlab
 re
 io
-numpy
+os
