@@ -214,7 +214,7 @@ if st.button("Generate Resume"):
             "email": email,
             "phone": phone,
             "summary": summary_text,
-            "skills": {skill["name"]: skill["score"] for skill in st.session_state.skills if skill["name"]},
+            "skills": {skill["name"]: skill["level"] for skill in st.session_state.skills if skill["name"]},
             "education": st.session_state.educations,
             "work_experience": work_experience_data,
             "projects": project_data,
