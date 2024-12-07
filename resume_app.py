@@ -9,7 +9,9 @@ import re
 import os
 
 # Load OpenAI API key from Streamlit secrets
-openai.api_key = os.getenv("OPENAI_API_KEY")
+client = OpenAI(
+    api_key=os.environ.get("OPENAI_API_KEY"),  # This is the default and can be omitted
+)
 
 def generate_refined_resume(chatgpt_prompt, job_profile):
     system_prompt = f"""
@@ -17,7 +19,7 @@ def generate_refined_resume(chatgpt_prompt, job_profile):
     to specific job descriptions. The job profile provided is: {job_profile}.
     """
     try:
-        response = openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": system_prompt},
