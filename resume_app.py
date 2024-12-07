@@ -9,7 +9,7 @@ import re
 import os
 
 # Load OpenAI API key from Streamlit secrets
-openai.api_key = os.getenv["OPENAI_API_KEY"]
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 def generate_refined_resume(chatgpt_prompt, job_profile):
     system_prompt = f"""
