@@ -8,10 +8,9 @@ import io
 import re
 import os
 
-# Load OpenAI API key securely
-openai.api_key = os.getenv("OPENAI_API_KEY", st.secrets.get("OPENAI_API_KEY"))
+# Load OpenAI API key from Streamlit secrets
+openai.api_key = os.getenv["OPENAI_API_KEY"]
 
-# Helper Function: Generate Refined Resume Content
 def generate_refined_resume(chatgpt_prompt, job_profile):
     system_prompt = f"""
     You are a highly skilled resume assistant. Your task is to help users create resumes tailored 
@@ -19,7 +18,7 @@ def generate_refined_resume(chatgpt_prompt, job_profile):
     """
     try:
         response = openai.ChatCompletion.create(
-            model="gpt-4",
+            model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": chatgpt_prompt},
@@ -32,79 +31,51 @@ def generate_refined_resume(chatgpt_prompt, job_profile):
         st.error(f"Error generating resume content: {e}")
         return ""
 
-# Helper Function: Render Markdown Text for PDFs
-def render_markdown_text(text):
-    text = re.sub(r"\*\*(.*?)\*\*", r"<b>\1</b>", text)  # Bold formatting
-    text = text.replace("\n", "<br/>")  # Line breaks
-    return text
-
-# Helper Function: Add a Section to PDF
-def add_section(title, content_list, content, style, spacer_height=10, title_color=colors.darkblue):
-    if content_list:
-        content.append(Paragraph(f"<font color='{title_color}'>{title}</font>", style))
-        for item in content_list:
-            content.append(Paragraph(item, style))
-            content.append(Spacer(1, spacer_height))
-
-# Helper Function: Generate PDF Resume
 def generate_resume_with_reportlab(data):
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4)
 
     styles = getSampleStyleSheet()
     title_style = ParagraphStyle(name="Title", fontSize=18, textColor=colors.darkblue, alignment=1)
-    heading_style = ParagraphStyle(name="Heading", fontSize=14, textColor=colors.darkblue, alignment=0)
     normal_style = ParagraphStyle(name="Normal", fontSize=11, alignment=0)
 
     content = []
-
-    # Name and Job Title
     content.append(Paragraph(f"<b>{data['name']}</b>", title_style))
     content.append(Paragraph(f"<b>{data['job_title']}</b>", title_style))
     content.append(Spacer(1, 12))
-
-    # Contact Information
     if data.get("email") or data.get("phone"):
-        contact_info_data = [[f"E-mail: {data.get('email', '')}", f"Phone: {data.get('phone', '')}"]]
-        contact_table = Table(contact_info_data, colWidths=[250, 250])
-        contact_table.setStyle(TableStyle([("ALIGN", (0, 0), (-1, -1), "LEFT"), ("TEXTCOLOR", (0, 0), (-1, -1), colors.blue)]))
-        content.append(contact_table)
+        content.append(Paragraph(f"Email: {data.get('email', '')}, Phone: {data.get('phone', '')}", normal_style))
         content.append(Spacer(1, 12))
-
-    # Professional Summary
     if data.get("summary"):
-        content.append(Paragraph(render_markdown_text(data["summary"]), normal_style))
+        content.append(Paragraph(data["summary"], normal_style))
         content.append(Spacer(1, 20))
 
-    # Skills
+    # Add Skills
     if data.get("skills"):
-        content.append(Paragraph("<b>Skills</b>", heading_style))
-        skills_data = [[Paragraph(f"<b>{skill}</b>", normal_style), f"{'★' * level}"] for skill, level in data["skills"].items()]
-        skills_table = Table(skills_data, colWidths=[200, 150])
-        content.append(skills_table)
+        content.append(Paragraph("<b>Skills</b>", title_style))
+        for skill, level in data["skills"].items():
+            content.append(Paragraph(f"{skill}: {'★' * level}", normal_style))
         content.append(Spacer(1, 20))
 
-    # Education
+    # Add Education
     if data.get("education"):
-        education = [f"{edu['degree']} - {edu['institution']} ({edu['year']})" for edu in data["education"]]
-        add_section("Education", education, content, normal_style)
+        content.append(Paragraph("<b>Education</b>", title_style))
+        for edu in data["education"]:
+            content.append(Paragraph(f"{edu['degree']} - {edu['institution']} ({edu['year']})", normal_style))
+        content.append(Spacer(1, 20))
 
-    # Work Experience
-    if data.get("work_experience"):
-        work_exp = [
-            f"<b>{exp['job_title']}</b> at <font color='darkblue'>{exp['company']}</font> ({exp['duration']})<br/>{render_markdown_text(exp['description'])}"
-            for exp in data["work_experience"]
-        ]
-        add_section("Work Experience", work_exp, content, normal_style)
-
-    # Projects
+    # Add Projects or Work Experience
     if data.get("projects"):
+        content.append(Paragraph("<b>Projects</b>", title_style))
         for project in data["projects"]:
-            content.append(Paragraph(f"<b>{project['name']}</b>", heading_style))
-            content.append(Paragraph(render_markdown_text(project["description"]), normal_style))
-            content.append(Spacer(1, 10))
+            content.append(Paragraph(f"{project['name']}: {project['description']}", normal_style))
+            content.append(Spacer(1, 12))
+    elif data.get("work_experience"):
+        content.append(Paragraph("<b>Work Experience</b>", title_style))
+        for work in data["work_experience"]:
+            content.append(Paragraph(f"{work['job_title']} at {work['company']} ({work['duration']}): {work['description']}", normal_style))
+            content.append(Spacer(1, 12))
 
-    # Generate PDF
     doc.build(content)
     buffer.seek(0)
     return buffer.getvalue()
@@ -112,12 +83,12 @@ def generate_resume_with_reportlab(data):
 # Initialize Session State
 if "skills" not in st.session_state:
     st.session_state["skills"] = []
-if "educations" not in st.session_state:
-    st.session_state["educations"] = [{}]
-if "work_experiences" not in st.session_state:
-    st.session_state["work_experiences"] = [{}]
+if "education" not in st.session_state:
+    st.session_state["education"] = [{}]
 if "projects" not in st.session_state:
     st.session_state["projects"] = [{}]
+if "work_experience" not in st.session_state:
+    st.session_state["work_experience"] = [{}]
 
 # Build Streamlit UI
 st.title("📄 ResumeAI - Build Your Resume")
@@ -132,52 +103,59 @@ summary = st.text_area("Professional Summary")
 
 # Skills Section
 st.header("💡 Skills")
-for i, skill in enumerate(st.session_state.skills):
+for i, skill in enumerate(st.session_state["skills"]):
     cols = st.columns([3, 1, 1])
     with cols[0]:
-        skill_name = st.text_input(f"Skill {i+1}", value=skill.get("name", ""), key=f"skill_name_{i}")
+        st.session_state["skills"][i]["name"] = st.text_input(f"Skill {i+1} Name", value=skill.get("name", ""), key=f"skill_name_{i}")
     with cols[1]:
-        skill_level = st.slider(f"Skill Level {i+1}", min_value=1, max_value=10, value=skill.get("level", 5), key=f"skill_level_{i}")
+        st.session_state["skills"][i]["level"] = st.slider(f"Skill {i+1} Level", 1, 10, value=skill.get("level", 5), key=f"skill_level_{i}")
     with cols[2]:
-        if st.button("Remove", key=f"remove_skill_{i}"):
-            st.session_state.skills.pop(i)
+        if st.button(f"Remove Skill {i+1}", key=f"remove_skill_{i}"):
+            st.session_state["skills"].pop(i)
             break
 if st.button("➕ Add Skill"):
-    st.session_state.skills.append({"name": "", "level": 5})
+    st.session_state["skills"].append({"name": "", "level": 5})
 
 # Education Section
 st.header("🎓 Education")
-for i, education in enumerate(st.session_state.educations):
+for i, edu in enumerate(st.session_state["education"]):
     with st.expander(f"Education {i+1}"):
-        st.text_input("Degree", key=f"edu_degree_{i}")
-        st.text_input("Institution", key=f"edu_institution_{i}")
-        st.text_input("Year", key=f"edu_year_{i}")
+        st.session_state["education"][i]["degree"] = st.text_input(f"Degree {i+1}", value=edu.get("degree", ""), key=f"edu_degree_{i}")
+        st.session_state["education"][i]["institution"] = st.text_input(f"Institution {i+1}", value=edu.get("institution", ""), key=f"edu_institution_{i}")
+        st.session_state["education"][i]["year"] = st.text_input(f"Year {i+1}", value=edu.get("year", ""), key=f"edu_year_{i}")
 if st.button("➕ Add Education"):
-    st.session_state.educations.append({})
+    st.session_state["education"].append({})
 
-# Work Experience Section
-st.header("💼 Work Experience")
-for i, experience in enumerate(st.session_state.work_experiences):
-    with st.expander(f"Work Experience {i+1}"):
-        st.text_input("Job Title", key=f"work_job_title_{i}")
-        st.text_input("Company", key=f"work_company_{i}")
-        st.text_input("Duration", key=f"work_duration_{i}")
-        st.text_area("Description", key=f"work_description_{i}")
-if st.button("➕ Add Work Experience"):
-    st.session_state.work_experiences.append({})
+# Selection: Projects or Work Experience
+section_choice = st.radio("What would you like to include?", ["Projects", "Work Experience"])
 
-# Projects Section
-st.header("📂 Projects")
-for i, project in enumerate(st.session_state.projects):
-    with st.expander(f"Project {i+1}"):
-        st.text_input("Project Name", key=f"proj_name_{i}")
-        st.text_area("Description", key=f"proj_desc_{i}")
-        st.text_input("Technologies Used", key=f"proj_tech_{i}")
-        st.text_input("Project Link", key=f"proj_link_{i}")
-if st.button("➕ Add Project"):
-    st.session_state.projects.append({})
+if section_choice == "Projects":
+    st.header("📂 Projects")
+    for i, project in enumerate(st.session_state["projects"]):
+        with st.expander(f"Project {i + 1}"):
+            st.session_state["projects"][i]["name"] = st.text_input(f"Project {i+1} Name", key=f"proj_name_{i}")
+            st.session_state["projects"][i]["description"] = st.text_area(f"Project {i+1} Description", key=f"proj_desc_{i}")
+        if st.button(f"Remove Project {i+1}", key=f"remove_proj_{i}"):
+            st.session_state["projects"].pop(i)
+            break
+    if st.button("➕ Add Project"):
+        st.session_state["projects"].append({})
 
-# Generate Resume Button
+elif section_choice == "Work Experience":
+    st.header("💼 Work Experience")
+    for i, work in enumerate(st.session_state["work_experience"]):
+        with st.expander(f"Work Experience {i + 1}"):
+            st.session_state["work_experience"][i]["job_title"] = st.text_input(f"Job Title {i+1}", key=f"work_job_title_{i}")
+            st.session_state["work_experience"][i]["company"] = st.text_input(f"Company {i+1}", key=f"work_company_{i}")
+            st.session_state["work_experience"][i]["duration"] = st.text_input(f"Duration {i+1}", key=f"work_duration_{i}")
+            st.session_state["work_experience"][i]["description"] = st.text_area(f"Description {i+1}", key=f"work_desc_{i}")
+        if st.button(f"Remove Work Experience {i+1}", key=f"remove_work_{i}"):
+            st.session_state["work_experience"].pop(i)
+            break
+    if st.button("➕ Add Work Experience"):
+        st.session_state["work_experience"].append({})
+
+# Generate Resume
 if st.button("Generate Resume"):
     resume_data = {
         "name": name,
@@ -185,10 +163,10 @@ if st.button("Generate Resume"):
         "email": email,
         "phone": phone,
         "summary": generate_refined_resume(summary, job_title),
-        "skills": {skill.get("name", ""): skill.get("level", 5) for skill in st.session_state.skills if skill.get("name")},
-        "education": st.session_state.educations,
-        "work_experience": st.session_state.work_experiences,
-        "projects": st.session_state.projects,
+        "skills": {skill["name"]: skill["level"] for skill in st.session_state["skills"] if skill["name"]},
+        "education": st.session_state["education"],
+        "projects": st.session_state["projects"] if section_choice == "Projects" else None,
+        "work_experience": st.session_state["work_experience"] if section_choice == "Work Experience" else None,
     }
     pdf_content = generate_resume_with_reportlab(resume_data)
     st.download_button("Download Resume", data=pdf_content, file_name="resume.pdf", mime="application/pdf")
