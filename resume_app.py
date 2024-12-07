@@ -239,8 +239,12 @@ for i, skill in enumerate(st.session_state.skills):
 
 # Add Skill Button
 if st.button("➕ Add Skill"):
-    add_skill()
-    st.experimental_rerun()
+    st.session_state.skills.append({"name": "", "score": 5})
+
+if st.button("Remove Last Skill"):
+    if st.session_state.skills:
+        st.session_state.skills.pop()
+
 
 # Section: Job Profile or Job Description
 st.header("💼 Job Profile/Description")
