@@ -17,7 +17,7 @@ client = OpenAI(
 def generate_refined_resume(chatgpt_prompt, job_profile):
     system_prompt = f"""
     You are a highly skilled resume assistant. Your task is to help users create resumes tailored 
-    to specific job descriptions. The job profile provided is: {job_profile}.
+    to specific job descriptions. The job profile provided is: {job_profile}. Based on this create a summary within 2 to 3 lines.
     """
     try:
         response = client.chat.completions.create(
@@ -160,16 +160,76 @@ elif section_choice == "Work Experience":
 
 # Generate Resume
 if st.button("Generate Resume"):
-    resume_data = {
-        "name": name,
-        "job_title": job_title,
-        "email": email,
-        "phone": phone,
-        "summary": generate_refined_resume(summary, job_title),
-        "skills": {skill["name"]: skill["level"] for skill in st.session_state["skills"] if skill["name"]},
-        "education": st.session_state["education"],
-        "projects": st.session_state["projects"] if section_choice == "Projects" else None,
-        "work_experience": st.session_state["work_experience"] if section_choice == "Work Experience" else None,
-    }
-    pdf_content = generate_resume_with_reportlab(resume_data)
-    st.download_button("Download Resume", data=pdf_content, file_name="resume.pdf", mime="application/pdf")
+    try:
+        # Generate summary using OpenAI
+        summary_text = generate_refined_resume(
+            "Create the Overall Summary of the resume and make it short, precise, and to the point.",
+            job_profile
+        )
+
+        # Prepare work experiences with refined descriptions
+        work_experience_data = []
+        for work in st.session_state.work_experiences:
+            if work.get("job_title") and work.get("company"):
+                refined_description = generate_refined_resume(
+                    f"Refine the job description for the role '{work['job_title']}' at '{work['company']}'. "
+                    f"Details: {work.get('description', '')}. "
+                    f"Then return an overview, key responsibilities, impact, and technologies used in points. Make it shorter and precise.",
+                    job_profile
+                )
+            else:
+                refined_description = work.get("description", "")
+            
+            work_experience_data.append({
+                "job_title": work.get("job_title", ""),
+                "company": work.get("company", ""),
+                "duration": work.get("duration", ""),
+                "description": refined_description,
+            })
+
+        # Prepare projects with refined descriptions
+        project_data = []
+        for project in st.session_state.projects:
+            if project.get("name"):
+                refined_description = generate_refined_resume(
+                    f"Refine the project description for the project '{project['name']}'. "
+                    f"Details: {project.get('description', '')}. "
+                    f"Then return an overview, my contribution, impact, and tools used in points. Make it shorter and precise.",
+                    job_profile
+                )
+            else:
+                refined_description = project.get("description", "")
+            
+            project_data.append({
+                "name": project.get("name", ""),
+                "description": refined_description,
+                "technologies": project.get("technologies", ""),
+                "link": project.get("link", ""),
+            })
+
+        # Collect all resume data
+        resume_data = {
+            "name": name,
+            "job_title": job_title,
+            "email": email,
+            "phone": phone,
+            "summary": summary_text,
+            "skills": {skill["name"]: skill["score"] for skill in st.session_state.skills if skill["name"]},
+            "education": st.session_state.educations,
+            "work_experience": work_experience_data,
+            "projects": project_data,
+        }
+
+        # Generate PDF
+        pdf_content = generate_resume_with_reportlab(resume_data)
+
+        # Offer PDF as a download
+        st.download_button(
+            label="Download Resume",
+            data=pdf_content,
+            file_name="resume.pdf",
+            mime="application/pdf"
+        )
+
+    except Exception as e:
+        st.error(f"Error generating resume: {e}")
