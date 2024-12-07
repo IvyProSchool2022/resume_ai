@@ -102,7 +102,7 @@ name = st.text_input("Full Name")
 job_title = st.text_input("Target Job Title")
 email = st.text_input("Email")
 phone = st.text_input("Phone")
-summary = st.text_area("Professional Summary")
+job_profile = st.text_area("Job Profile")
 
 # Skills Section
 st.header("💡 Skills")
