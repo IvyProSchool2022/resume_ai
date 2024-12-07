@@ -7,6 +7,7 @@ from reportlab.lib import colors
 import io
 import re
 import os
+from openai import OpenAI
 
 # Load OpenAI API key from Streamlit secrets
 client = OpenAI(
