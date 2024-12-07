@@ -9,13 +9,7 @@ import re
 import os
 
 # Load OpenAI API key from environment variables or Streamlit secrets
-api_key = os.getenv('OPENAI_API_KEY')
-
-if not api_key:
-    st.error("OpenAI API key is not set. Please set the OPENAI_API_KEY environment variable.")
-else:
-    # Initialize OpenAI client
-    client = openai.Client(api_key=api_key)
+openai.api_key = os.getenv('OPENAI_API_KEY')
 
 def generate_refined_resume(chatgpt_prompt, job_profile):   
     # System content dynamically incorporating job profile
@@ -27,7 +21,7 @@ def generate_refined_resume(chatgpt_prompt, job_profile):
     """
     # Call GPT to refine the resume
     try:
-        response = client.chat.completions.create(
+        response = openai.ChatCompletion.create(
             model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": system_prompt},
