@@ -307,37 +307,37 @@ if user_type == "Experienced":
     if st.button("➕ Add Work Experience"):
         st.session_state.work_experiences.append({})
         st.rerun()
-
-# Section: Projects (for all users)
-st.header("📂 Projects")
-for i, project in enumerate(st.session_state.projects):
-    with st.expander(f"Project {i + 1}", expanded=True):
-        project_name = st.text_input(
-            f"Project Name {i + 1}", placeholder="Enter project name", key=f"proj_name_{i}"
-        )
-        project_desc = st.text_area(
-            f"Project Description {i + 1}",
-            placeholder="Describe the project",
-            key=f"proj_desc_{i}",
-        )
-        technologies = st.text_input(
-            f"Technologies Used {i + 1}",
-            placeholder="List technologies used",
-            key=f"proj_tech_{i}",
-        )
-        link = st.text_input(f"Project Link {i + 1}", placeholder="Enter project link", key=f"proj_link_{i}")
-        st.session_state.projects[i] = {
-            "name": project_name,
-            "description": project_desc,
-            "technologies": technologies,
-            "link": link,
-        }
-    if st.button(f"Remove Project {i + 1}", key=f"remove_proj_{i}"):
-        st.session_state.projects.pop(i)
+else:
+    # Section: Projects (for all users)
+    st.header("📂 Projects")
+    for i, project in enumerate(st.session_state.projects):
+        with st.expander(f"Project {i + 1}", expanded=True):
+            project_name = st.text_input(
+                f"Project Name {i + 1}", placeholder="Enter project name", key=f"proj_name_{i}"
+            )
+            project_desc = st.text_area(
+                f"Project Description {i + 1}",
+                placeholder="Describe the project",
+                key=f"proj_desc_{i}",
+            )
+            technologies = st.text_input(
+                f"Technologies Used {i + 1}",
+                placeholder="List technologies used",
+                key=f"proj_tech_{i}",
+            )
+            link = st.text_input(f"Project Link {i + 1}", placeholder="Enter project link", key=f"proj_link_{i}")
+            st.session_state.projects[i] = {
+                "name": project_name,
+                "description": project_desc,
+                "technologies": technologies,
+                "link": link,
+            }
+        if st.button(f"Remove Project {i + 1}", key=f"remove_proj_{i}"):
+            st.session_state.projects.pop(i)
+            st.rerun()
+    if st.button("➕ Add Project"):
+        st.session_state.projects.append({})
         st.rerun()
-if st.button("➕ Add Project"):
-    st.session_state.projects.append({})
-    st.rerun()
 
 if st.button("Generate Resume"):
     resume_data = {
