@@ -235,12 +235,12 @@ for i, skill in enumerate(st.session_state.skills):
     with cols[2]:
         if st.button("Remove", key=f"remove_skill_{i}"):
             remove_skill(i)
-            st.experimental_rerun()
+            st.rerun()
 
 # Add Skill Button
 if st.button("➕ Add Skill"):
     add_skill()
-    st.experimental_rerun()
+    st.rerun()
 
 # Section: Job Profile or Job Description
 st.header("💼 Job Profile/Description")
@@ -269,10 +269,10 @@ for i, education in enumerate(st.session_state.educations):
         }
     if st.button(f"Remove Education {i + 1}", key=f"remove_edu_{i}"):
         st.session_state.educations.pop(i)
-        st.experimental_rerun()
+        st.rerun()
 if st.button("➕ Add Education"):
     st.session_state.educations.append({})
-    st.experimental_rerun()
+    st.rerun()
 
 # User Type Selection
 user_type = st.radio("Are you a fresher or experienced?", ["Fresher", "Experienced"], horizontal=True)
@@ -304,10 +304,10 @@ if user_type == "Experienced":
             }
         if st.button(f"Remove Work Experience {i + 1}", key=f"remove_work_{i}"):
             st.session_state.work_experiences.pop(i)
-            st.experimental_rerun()
+            st.rerun()
     if st.button("➕ Add Work Experience"):
         st.session_state.work_experiences.append({})
-        st.experimental_rerun()
+        st.rerun()
 
 # Section: Projects (for all users)
 st.header("📂 Projects")
@@ -335,10 +335,10 @@ for i, project in enumerate(st.session_state.projects):
         }
     if st.button(f"Remove Project {i + 1}", key=f"remove_proj_{i}"):
         st.session_state.projects.pop(i)
-        st.experimental_rerun()
+        st.rerun()
 if st.button("➕ Add Project"):
     st.session_state.projects.append({})
-    st.experimental_rerun()
+    st.rerun()
 
 if st.button("Generate Resume"):
     resume_data = {
