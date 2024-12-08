@@ -211,7 +211,6 @@ name = st.text_input("Full Name", placeholder="Enter your name")
 job_title = st.text_input("Target Job Title", placeholder="Enter the job title you're applying for")
 email = st.text_input("Email", placeholder="Enter your email")
 phone = st.text_input("Phone", placeholder="Enter your phone number")
-summary = st.text_area("Professional Summary", placeholder="Write a brief summary about yourself")
 
 # Section: Skills
 st.header("💡 Skills")
